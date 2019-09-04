@@ -1,6 +1,5 @@
 package org.oppia.app.drawer
 
-import android.content.Context
 import android.os.Bundle
 import android.view.*
 
@@ -9,7 +8,7 @@ import androidx.appcompat.widget.Toolbar
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import com.google.android.material.navigation.NavigationView
-import org.oppia.app.ParentActivity
+import org.oppia.app.activity.ParentDrawerActivity
 
 import org.oppia.app.R
 
@@ -53,7 +52,7 @@ class DrawerFragment : Fragment(), NavigationView.OnNavigationItemSelectedListen
 
   private fun openFragment(menuItemId: Int) {
 
-    (activity as ParentActivity).openFragment(menuItemId)
+    (activity as ParentDrawerActivity).openFragment(menuItemId)
   }
 
   fun setUpDrawer(fragmentId: Int, drawerLayout: DrawerLayout, toolbar: Toolbar) {
