@@ -28,6 +28,12 @@ class AdminAuthActivityPresenter @Inject constructor(
     activity.supportActionBar?.setHomeAsUpIndicator(R.drawable.ic_close_white_24dp)
 
     val binding = DataBindingUtil.setContentView<AdminAuthActivityBinding>(activity, R.layout.admin_auth_activity)
+
+//    binding.toolbar.setNavigationIcon(R.drawable.ic_close_white_24dp)
+//    binding.toolbar.setNavigationOnClickListener {
+//      (activity as AdminAuthActivity).finish()
+//    }
+
     val adminPin = activity.intent.getStringExtra(KEY_ADMIN_AUTH_ADMIN_PIN)
     binding.apply {
       lifecycleOwner = activity
