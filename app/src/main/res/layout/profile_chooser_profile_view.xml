@@ -4,18 +4,20 @@
   xmlns:profile="http://schemas.android.com/tools">
 
   <data>
+
     <import type="android.view.View" />
+
     <variable
       name="viewModel"
       type="org.oppia.app.model.ProfileChooserUiModel" />
   </data>
 
   <LinearLayout
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="24dp"
     android:gravity="center_horizontal"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="24dp">
 
     <de.hdodenhof.circleimageview.CircleImageView
       android:id="@+id/profile_avatar_img"
@@ -31,6 +33,7 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:fontFamily="sans-serif-medium"
+      android:maxWidth="116dp"
       android:text="@{viewModel.profile.name}"
       android:textColor="@color/white"
       android:textSize="14sp" />

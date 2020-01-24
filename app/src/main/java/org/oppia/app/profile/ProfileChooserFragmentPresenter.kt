@@ -9,6 +9,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
+import com.google.android.flexbox.AlignItems
+import com.google.android.flexbox.FlexDirection
+import com.google.android.flexbox.FlexWrap
+import com.google.android.flexbox.FlexboxLayoutManager
+import com.google.android.flexbox.JustifyContent
 import org.oppia.app.R
 import org.oppia.app.databinding.ProfileChooserAddViewBinding
 import org.oppia.app.databinding.ProfileChooserFragmentBinding
@@ -91,9 +96,12 @@ class ProfileChooserFragmentPresenter @Inject constructor(
   }
 
   private fun initAdapter() {
-    val layoutManager = GridAutoFitLayoutManager(activity.applicationContext, columnWidth = 500)// assume cell width of 500px
+    val layoutManager = FlexboxLayoutManager(context)
+    layoutManager.flexDirection = FlexDirection.ROW
+    layoutManager.flexWrap = FlexWrap.WRAP
+    layoutManager.alignItems = AlignItems.CENTER
+    layoutManager.justifyContent = JustifyContent.SPACE_BETWEEN
     binding.profileRecyclerView.setLayoutManager(layoutManager)
-    binding.profileRecyclerView.setHasFixedSize(true)
   }
 
   private fun createRecyclerViewAdapter(): BindableAdapter<ProfileChooserUiModel> {
