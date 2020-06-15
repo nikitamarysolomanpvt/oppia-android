@@ -17,10 +17,6 @@ class HtmlParserTestActivity : InjectableAppCompatActivity() {
   @field:DefaultResourceBucketName
   lateinit var resourceBucketName: String
 
-  @Inject
-  @field:DefaultResourceBucketName
-  lateinit var resourceBucketName: String
-
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     activityComponent.inject(this)
