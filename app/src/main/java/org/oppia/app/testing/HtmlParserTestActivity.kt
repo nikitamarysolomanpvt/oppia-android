@@ -11,8 +11,11 @@ import javax.inject.Inject
 
 /** This is a dummy activity to test Html parsing. */
 class HtmlParserTestActivity : InjectableAppCompatActivity() {
+  @Inject lateinit var htmlParserFactory: HtmlParser.Factory
+
   @Inject
-  lateinit var htmlParserFactory: HtmlParser.Factory
+  @field:DefaultResourceBucketName
+  lateinit var resourceBucketName: String
 
   @Inject
   @field:DefaultResourceBucketName

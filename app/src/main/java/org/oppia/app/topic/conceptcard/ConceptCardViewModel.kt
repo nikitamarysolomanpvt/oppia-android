@@ -1,6 +1,5 @@
 package org.oppia.app.topic.conceptcard
 
-import android.widget.TextView
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Transformations
 import androidx.lifecycle.ViewModel
@@ -55,17 +54,26 @@ class ConceptCardViewModel @Inject constructor(
 
   private fun processConceptCardResult(conceptCardResult: AsyncResult<ConceptCard>): ConceptCard {
     if (conceptCardResult.isFailure()) {
-      logger.e("ConceptCardFragment", "Failed to retrieve Concept Card", conceptCardResult.getErrorOrNull()!!)
+      logger.e(
+        "ConceptCardFragment",
+        "Failed to retrieve Concept Card",
+        conceptCardResult.getErrorOrNull()!!
+      )
     }
     return conceptCardResult.getOrDefault(ConceptCard.getDefaultInstance())
   }
 
   private fun processExplanationResult(conceptCardResult: AsyncResult<ConceptCard>): CharSequence {
     if (conceptCardResult.isFailure()) {
-      logger.e("ConceptCardFragment", "Failed to retrieve Concept Card", conceptCardResult.getErrorOrNull()!!)
+      logger.e(
+        "ConceptCardFragment",
+        "Failed to retrieve Concept Card",
+        conceptCardResult.getErrorOrNull()!!
+      )
     }
     val conceptCard = conceptCardResult.getOrDefault(ConceptCard.getDefaultInstance())
-    return htmlParserFactory.create(resourceBucketName, entityType, skillId, /* imageCenterAlign= */ true)
+    return htmlParserFactory
+      .create(resourceBucketName, entityType, skillId, /* imageCenterAlign= */true)
       .parseOppiaHtml(conceptCard.explanation.html, binding.conceptCardExplanationText)
   }
 }

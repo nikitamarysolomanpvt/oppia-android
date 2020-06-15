@@ -27,6 +27,8 @@ import org.mockito.Mockito.verify
 import org.mockito.junit.MockitoJUnit
 import org.mockito.junit.MockitoRule
 import org.oppia.domain.audio.AudioPlayerController.PlayStatus
+import org.oppia.testing.FakeExceptionLogger
+import org.oppia.testing.TestLogReportingModule
 import org.oppia.util.caching.CacheAssetsLocally
 import org.oppia.util.data.AsyncResult
 import org.oppia.util.logging.EnableConsoleLog
@@ -39,6 +41,7 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowMediaPlayer
 import org.robolectric.shadows.util.DataSource
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Qualifier
 import javax.inject.Singleton
@@ -73,11 +76,13 @@ class AudioPlayerControllerTest {
   @Inject lateinit var context: Context
 
   @Inject lateinit var audioPlayerController: AudioPlayerController
+
+  @Inject lateinit var fakeExceptionLogger: FakeExceptionLogger
   private lateinit var shadowMediaPlayer: ShadowMediaPlayer
 
   private val TEST_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
   private val TEST_URL2 = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-
+  private val TEST_FAIL_URL = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2"
   @Before
   fun setUp() {
     setUpTestApplicationComponent()
@@ -209,12 +214,12 @@ class AudioPlayerControllerTest {
     shadowMediaPlayer.invokeCompletionListener()
 
     verify(mockAudioPlayerObserver, atLeastOnce()).onChanged(audioPlayerResultCaptor.capture())
-    assertThat(audioPlayerResultCaptor.allValues.size).isEqualTo(6)
-    assertThat(audioPlayerResultCaptor.allValues[1].isPending()).isTrue()
-    assertThat(audioPlayerResultCaptor.allValues[2].getOrThrow().type).isEqualTo(PlayStatus.PREPARED)
-    assertThat(audioPlayerResultCaptor.allValues[3].getOrThrow().type).isEqualTo(PlayStatus.PLAYING)
+    assertThat(audioPlayerResultCaptor.allValues.size).isEqualTo(7)
+    assertThat(audioPlayerResultCaptor.allValues[2].isPending()).isTrue()
+    assertThat(audioPlayerResultCaptor.allValues[3].getOrThrow().type).isEqualTo(PlayStatus.PREPARED)
     assertThat(audioPlayerResultCaptor.allValues[4].getOrThrow().type).isEqualTo(PlayStatus.PLAYING)
-    assertThat(audioPlayerResultCaptor.allValues[5].getOrThrow().type).isEqualTo(PlayStatus.COMPLETED)
+    assertThat(audioPlayerResultCaptor.allValues[5].getOrThrow().type).isEqualTo(PlayStatus.PLAYING)
+    assertThat(audioPlayerResultCaptor.allValues[6].getOrThrow().type).isEqualTo(PlayStatus.COMPLETED)
   }
 
   @Test
@@ -349,14 +354,17 @@ class AudioPlayerControllerTest {
   }
 
   @Test
-  fun testController_alreadyInitialized_initializePlayer_fails() {
-    arrangeMediaPlayer()
+  @ExperimentalCoroutinesApi
+  fun testController_invokeErrorListener_invokePrepared_verifyAudioStatusIsFailure()
+      = runBlockingTest(coroutineContext) {
+    audioPlayerController.initializeMediaPlayer().observeForever(mockAudioPlayerObserver)
+    audioPlayerController.changeDataSource(TEST_URL)
 
-    val exception = assertThrows(IllegalStateException::class) {
-      audioPlayerController.initializeMediaPlayer()
-    }
+    shadowMediaPlayer.invokeErrorListener(/* what= */ 0, /* extra= */ 0)
+    shadowMediaPlayer.invokePreparedListener()
 
-    assertThat(exception).hasMessageThat().contains("Media player has already been initialized")
+    verify(mockAudioPlayerObserver, atLeastOnce()).onChanged(audioPlayerResultCaptor.capture())
+    assertThat(audioPlayerResultCaptor.value.isFailure()).isTrue()
   }
 
   @Test
@@ -395,6 +403,18 @@ class AudioPlayerControllerTest {
     assertThat(exception).hasMessageThat().contains("Media Player not in a prepared state")
   }
 
+  @Test
+  fun testController_initializePlayer_invokePrepared_reportsfailure_logsException() {
+    audioPlayerController.initializeMediaPlayer()
+    audioPlayerController.changeDataSource(TEST_FAIL_URL)
+
+    shadowMediaPlayer.invokePreparedListener()
+    val exception = fakeExceptionLogger.getMostRecentException()
+
+    assertThat(exception).isInstanceOf(IOException::class.java)
+    assertThat(exception).hasMessageThat().contains("Invalid URL")
+  }
+
   private fun arrangeMediaPlayer() {
     audioPlayerController.initializeMediaPlayer().observeForever(mockAudioPlayerObserver)
     audioPlayerController.changeDataSource(TEST_URL)
@@ -404,9 +424,11 @@ class AudioPlayerControllerTest {
   private fun addMediaInfo() {
     val dataSource = DataSource.toDataSource(context , Uri.parse(TEST_URL))
     val dataSource2 = DataSource.toDataSource(context , Uri.parse(TEST_URL2))
+    val dataSource3 = DataSource.toDataSource(context, Uri.parse(TEST_FAIL_URL))
     val mediaInfo = ShadowMediaPlayer.MediaInfo(/* duration= */ 1000,/* preparationDelay= */ 0)
     ShadowMediaPlayer.addMediaInfo(dataSource, mediaInfo)
     ShadowMediaPlayer.addMediaInfo(dataSource2, mediaInfo)
+    ShadowMediaPlayer.addException(dataSource3, IOException("Invalid URL"))
   }
 
   // TODO(#89): Move to a common test library.
@@ -485,7 +507,7 @@ class AudioPlayerControllerTest {
 
   // TODO(#89): Move this to a common test application component.
   @Singleton
-  @Component(modules = [TestModule::class])
+  @Component(modules = [TestModule::class, TestLogReportingModule::class])
   interface TestApplicationComponent {
     @Component.Builder
     interface Builder {
